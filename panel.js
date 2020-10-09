@@ -28,6 +28,25 @@ let _originalPoliciesUsedOnPage = {};
 let _customizedPolicies = {};
 let _oldUrl = null; // previous url of inspected tab after a reload/navigation.
 
+/**
+ * Converts allowlist item in Feature-Policy syntax to Permissions-Policy
+ * syntax.
+ * @param {string} item
+ * @returns {string}
+ */
+function allowlistItemFP2PP(item) {
+  switch (item) {
+    case "*":
+      return "*";
+    case "'self'":
+      return "self";
+    case "'none'":
+      return "";
+    default:
+      return `"${item}"`
+  }
+}
+
 function getPermissionsPolicyAllowListOnPage(features) {
   const map = {};
   const permissionsPolicy = document.policy ||
@@ -144,6 +163,32 @@ class PermissionsPolicyMananger {
 
   set customizedPolicies(policies) {
     _customizedPolicies = policies;
+  }
+
+  /**
+   * Overrides the value in feature_policy parameter with |customizedPolicies|.
+   *
+   * @param {FeaturePolicyHeader} header
+   * @returns {FeaturePolicyHeader}
+   */
+  overrideFeaturePolicyHeader(header) {
+    for (const [policyName, val] of Object.entries(this.customizedPolicies)) {
+      header.policies.set(policyName, val.allowList);
+    }
+    return header;
+  }
+
+  /**
+   * Overrides the value in permissions_policy parameter with |customizedPolicies|.
+   *
+   * @param {PermissionsPolicyHeader} header
+   * @returns {PermissionsPolicyHeader}
+   */
+  overridePermissionsPolicyHeader(header) {
+    for (const [policyName, val] of Object.entries(this.customizedPolicies)) {
+      header.policies.set(policyName, val.allowList.map(allowlistItemFP2PP));
+    }
+    return header;
   }
 
   restoreOriginalPoliciesSetByPage() {
