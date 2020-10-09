@@ -9,6 +9,7 @@
   "author": "Eric Bidelman <ebidel@>",
   "license": "Apache-2.0",
   "dependencies": {
+    "jasmine": "^3.6.1",
     "lit-html": "^0.10.2"
   }
 }
