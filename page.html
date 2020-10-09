@@ -23,16 +23,18 @@ limitations under the License.
 <main class="layout">
   <section id="sidebar" class="border-right">
     <hgroup>
-      <h1 class="title">Feature Policy Tester</h1>
+      <h1 class="title">Permissions Policy Tester</h1>
       <!-- <h2 class="subtitle">tester</h2> -->
     </hgroup>
     <div class="summary">
-      <a href="https://wicg.github.io/feature-policy/" target="_blank">Feature Policy</a> can be
+      <a href="https://wicg.github.io/permissions-policy/" target="_blank">Permissions Policy</a> can be
       used to selectively enable, disable, and modify the behavior of various features and APIs
       in the browser. This can provide a well-lit path towards good performance and prevent common
       footguns when building or maintaining a site.
       <br><br>
+      <!-- TODO: Add a more up to date permissions policy introduction article link -->
       Learn more on <a href="https://developers.google.com/web/updates/2018/06/feature-policy" target="_blank">developers.google.com</a>
+      <!-- TODO: change demo site url to permissions-policy-demos.appspot.com -->
       or visit the <a href="https://feature-policy-demos.appspot.com/" target="_blank">demos site</a>.
     </div>
     <div id="settings">
@@ -41,20 +43,20 @@ limitations under the License.
         <label>
           <input type="checkbox" id="persist-on-reload">Persist policy selections across page navigations
         </label>
-        <p class="hint">Help: By default, refreshing the same page will continue to use any feature
+        <p class="hint">Help: By default, refreshing the same page will continue to use any permissions
         policy settings you customize to the right. To persist these selections
         across navigations to different pages, check the box above.</p>
       </div>
       <div>
         <button id="restore-button">Restore policies sent by server</button>
-        <p class="hint">Help: Restores the original feature policies sent by the server and removes
+        <p class="hint">Help: Restores the original permissions policies sent by the server and removes
         any customized values to the right.</p>
       </div>
     </div>
   </section>
   <div id="policy-lists">
     <h2>Policy status</h2>
-    <div class="instructions">Instructions: click the feature polices below to
+    <div class="instructions">Instructions: click the permissions polices below to
     toggle see how they effect the page. The page automatically refreshes.</div>
     <div id="error-msg"></div>
     <div class="layout">

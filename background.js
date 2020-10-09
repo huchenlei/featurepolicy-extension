@@ -8,6 +8,7 @@
  */
 
 const FP_HEADER = 'Feature-Policy';
+const PP_HEADER = 'Permissions-Policy';
 
 const connections = new Map();
 
@@ -15,9 +16,9 @@ function log(msg) {
   console.log(msg);
 }
 
-function getAllFeaturePolicies() {
-  const featurePolicy = document.policy || document.featurePolicy;
-  return featurePolicy.allowedFeatures();
+function getAllPermissionsPolicies() {
+  const permissionsPolicy = document.policy || document.permissionsPolicy || document.featurePolicy;
+  return permissionsPolicy.allowedFeatures();
 }
 
 async function getCurrentTab() {
@@ -42,17 +43,18 @@ chrome.webRequest.onHeadersReceived.addListener(details => {
   const policyManager = connections.get(details.tabId).policyManager;
 
   const responseHeaders = [];
-  const featurePolicyHeaders = new Map();
+  const permissionsPolicyHeaders = new Map();
 
   // Preserve headers sent by page and collect separate Feature-Policy headers
   // into an aggregated, single header.
   details.responseHeaders.forEach((header, i) => {
+    // TODO: handle permissions policy header syntax parsing.
     const regex = RegExp(FP_HEADER, 'i');
     if (regex.test(header.name)) {
       // Support multiple allow lists per policy name.
       // e.g. Feature-Policy: unsized-images 'none'; geolocation *; usb *
       header.value.split(';').map(item => item.trim()).map(item => item.split(' ')).forEach(([policyName, val]) => {
-        featurePolicyHeaders.set(policyName, [val]);
+        permissionsPolicyHeaders.set(policyName, [val]);
       });
     } else {
       responseHeaders.push(Object.assign({}, header));
@@ -61,10 +63,10 @@ chrome.webRequest.onHeadersReceived.addListener(details => {
 
   // Customizations come last to override any values which were previously set.
   for (const [policyName, val] of Object.entries(policyManager.customizedPolicies)) {
-    featurePolicyHeaders.set(policyName, val.allowList);
+    permissionsPolicyHeaders.set(policyName, val.allowList);
   }
 
-  for (const [policyName, allowList] of featurePolicyHeaders) {
+  for (const [policyName, allowList] of permissionsPolicyHeaders) {
     responseHeaders.push({name: FP_HEADER, value: `${policyName} ${allowList.join(' ')}`});
   }
 

@@ -23,18 +23,20 @@ const activePoliciesEl = document.querySelector('#active-policies');
 const errorEl = document.querySelector('#error-msg');
 const restoreButton = document.querySelector('#restore-button');
 
-let _allFeaturePolicies = []; /* Array<string> all feature policy names supported by the browser. */
+let _allPermissionsPolicies = []; /* Array<string> all permissions policy names supported by the browser. */
 let _originalPoliciesUsedOnPage = {};
 let _customizedPolicies = {};
 let _oldUrl = null; // previous url of inspected tab after a reload/navigation.
 
-function getFeaturePolicyAllowListOnPage(features) {
+function getPermissionsPolicyAllowListOnPage(features) {
   const map = {};
-  const featurePolicy = document.policy || document.featurePolicy;
+  const permissionsPolicy = document.policy ||
+                            document.permissionsPolicy ||
+                            document.featurePolicy;
   for (const feature of features) {
     map[feature] = {
-      allowed: featurePolicy.allowsFeature(feature),
-      allowList: featurePolicy.getAllowlistForFeature(feature),
+      allowed: permissionsPolicy.allowsFeature(feature),
+      allowList: permissionsPolicy.getAllowlistForFeature(feature),
     };
   }
   return map;
@@ -115,17 +117,17 @@ const UI = {
   }
 };
 
-class FeaturePolicyMananger {
-  get allFeaturePoliciesSupportedByBrowser() {
-    if (!_allFeaturePolicies.length) {
+class PermissionsPolicyMananger {
+  get allPermissionsPoliciesSupportedByBrowser() {
+    if (!_allPermissionsPolicies.length) {
       console.warn(
-        'List of feature policies supported by the browser was not set.');
+        'List of permissions policies supported by the browser was not set.');
     }
-    return _allFeaturePolicies || [];
+    return _allPermissionsPolicies || [];
   }
 
-  set allFeaturePoliciesSupportedByBrowser(features) {
-    _allFeaturePolicies = features;
+  set allPermissionsPoliciesSupportedByBrowser(features) {
+    _allPermissionsPolicies = features;
   }
 
   get originalPoliciesSetByPage() {
@@ -160,20 +162,20 @@ class FeaturePolicyMananger {
     return list;
   }
 
-  getFeaturePolicies() {
-    // Inject the _getFeaturePolicyAllowListOnPage function into the page
+  getPermissionsPolicies() {
+    // Inject the _getPermissionsPolicyAllowListOnPage function into the page
     // and return its eval'd result.
     const expression = `(function() {
-      ${getFeaturePolicyAllowListOnPage.toString()};
-      const allPolicies = ${JSON.stringify(this.allFeaturePoliciesSupportedByBrowser)};
-      return getFeaturePolicyAllowListOnPage(allPolicies);
+      ${getPermissionsPolicyAllowListOnPage.toString()};
+      const allPolicies = ${JSON.stringify(this.allPermissionsPoliciesSupportedByBrowser)};
+      return getPermissionsPolicyAllowListOnPage(allPolicies);
     })()`;
 
     chrome.devtools.inspectedWindow.eval(expression, (result, isException) => {
       UI.clearError();
 
       if (isException) {
-        UI.displayError("Error getting page's feature policy list");
+        UI.displayError("Error getting page's permissions policy list");
         return;
       }
 
@@ -203,7 +205,7 @@ class FeaturePolicyMananger {
   }
 }
 
-const policyManager = new FeaturePolicyMananger();
+const policyManager = new PermissionsPolicyMananger();
 
 // Refresh policy lists if page is navigated.
 chrome.devtools.network.onNavigated.addListener(newUrl => {
@@ -221,11 +223,11 @@ chrome.devtools.network.onNavigated.addListener(newUrl => {
     return; // Prevent rest of handler from being run.
   }
 
-  policyManager.getFeaturePolicies();
+  policyManager.getPermissionsPolicies();
 });
 
-// Create "Feature Policies" Devtools panel.
-chrome.devtools.panels.create('Feature Policy', null, 'page.html', async panel => {
+// Create "Permissions Policies" Devtools panel.
+chrome.devtools.panels.create('Permissions Policy', null, 'page.html', async panel => {
   // panel.onShown.addListener(() => {
   //   // bgPage.log('panel.onShown');
   //   policyManager.restoreOriginalPoliciesSetByPage();
@@ -236,8 +238,8 @@ chrome.devtools.panels.create('Feature Policy', null, 'page.html', async panel =
 
   if (!('policy' in document)) {
     UI.displayError(
-      `This extension requires the Feature Policy JS API to work
-      (e.g. document.featurePolicy or the older document.policy).
+      `This extension requires the Permissions Policy JS API to work
+      (e.g. document.permissionsPolicy or the older document.policy and document.featurePolicy).
       Please turn it on in --enable-experimental-web-platform-features flag in about:flags.`);
   }
 
@@ -249,8 +251,8 @@ chrome.devtools.panels.create('Feature Policy', null, 'page.html', async panel =
   }
   _oldUrl = tab.url; // Set initial URL being inspected..
 
-  policyManager.allFeaturePoliciesSupportedByBrowser = bgPage.getAllFeaturePolicies();
-  policyManager.getFeaturePolicies();
+  policyManager.allPermissionsPoliciesSupportedByBrowser = bgPage.getAllPermissionsPolicies();
+  policyManager.getPermissionsPolicies();
 
   bgPage.setPolicyManager(chrome.devtools.inspectedWindow.tabId, policyManager);
 
