@@ -1,4 +1,4 @@
-const { FeaturePolicyHeader, PermissionsPolicyHeader } = require('../src/permissions-policy-header.js');
+import { FeaturePolicyHeader, PermissionsPolicyHeader } from '../src/permissions-policy-header.js';
 
 describe('FeaturePolicyHeader', () => {
   it('Should parse valid policy', () => {

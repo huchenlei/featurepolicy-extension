@@ -4,11 +4,13 @@
   "description": "DevTools extension to test Feature Policy settings",
   "main": "panel.js",
   "scripts": {
-    "test": "jasmine"
+    "test": "babel-node spec/run.js"
   },
   "author": "Eric Bidelman <ebidel@>",
   "license": "Apache-2.0",
   "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
     "lit-html": "^0.10.2"
   },
   "devDependencies": {

@@ -86,9 +86,8 @@ class PermissionsPolicyHeader {
   }
 };
 
-if (typeof module !== 'undefined' && module.hasOwnProperty('exports')) {
-  module.exports = {
-    FeaturePolicyHeader,
-    PermissionsPolicyHeader
-  };
-}
+export {
+  FeaturePolicyHeader,
+  PermissionsPolicyHeader
+};
+
