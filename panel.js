@@ -18,7 +18,6 @@ import {html, render} from './node_modules/lit-html/lib/lit-extended.js';
 import {repeat} from './node_modules/lit-html/lib/repeat.js';
 
 import { PermissionsPolicyMananger } from './src/permissions-policy-manager.js';
-// import './pptr-crx.js';
 
 const persisteAcrossReload = document.querySelector('#persist-on-reload');
 const activePoliciesEl = document.querySelector('#active-policies');
@@ -29,7 +28,6 @@ let _oldUrl = null; // previous url of inspected tab after a reload/navigation.
 
 function reloadPage() {
   chrome.devtools.inspectedWindow.reload();
-  // chrome.tabs.query({active: true}, tab => chrome.tabs.reload(tab.tabId));
 }
 
 function getBackgroundPage() {
@@ -117,14 +115,6 @@ chrome.devtools.network.onNavigated.addListener(newUrl => {
 
 // Create "Permissions Policies" Devtools panel.
 chrome.devtools.panels.create('Permissions Policy', null, 'page.html', async panel => {
-  // panel.onShown.addListener(() => {
-  //   // bgPage.log('panel.onShown');
-  //   policyManager.restoreOriginalPoliciesSetByPage();
-  // });
-  // panel.onHidden.addListener(() => {
-  //   // bgPage.log('panel.onHidden');
-  // });
-
   if (!('policy' in document)) {
     UI.displayError(
       `This extension requires the Permissions Policy JS API to work
@@ -152,12 +142,6 @@ chrome.devtools.panels.create('Permissions Policy', null, 'page.html', async pan
 });
 
 
-
-// chrome.webRequest.onCompleted.addListener(details => {
-//   //UI.debugResponseHeaders(details.responseHeaders);
-//   console.log('onCompleted', details);
-// }, {urls: ['<all_urls>'], types: ['main_frame']}, ['responseHeaders']);
-
 const bgPageConnection = chrome.runtime.connect({name: 'devtools-page'});
 bgPageConnection.postMessage({
   name: 'init',
@@ -166,10 +150,3 @@ bgPageConnection.postMessage({
 
 window.UI = UI;
 window.policyManager = policyManager;
-
-// bgPageConnection.onMessage.addListener((message, sender, sendResponse) => {
-//   if (message.name === 'getPagePolicies') {
-//     bgPageConnection.postMessage({customizedPolicies: policyManager.customizedPolicies});
-//   }
-// });
-
