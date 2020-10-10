@@ -16,6 +16,8 @@
 
 import {html, render} from './node_modules/lit-html/lib/lit-extended.js';
 import {repeat} from './node_modules/lit-html/lib/repeat.js';
+
+import { PermissionsPolicyMananger } from './src/permissions-policy-manager.js';
 // import './pptr-crx.js';
 
 const persisteAcrossReload = document.querySelector('#persist-on-reload');
@@ -23,55 +25,11 @@ const activePoliciesEl = document.querySelector('#active-policies');
 const errorEl = document.querySelector('#error-msg');
 const restoreButton = document.querySelector('#restore-button');
 
-let _allPermissionsPolicies = []; /* Array<string> all permissions policy names supported by the browser. */
-let _originalPoliciesUsedOnPage = {};
-let _customizedPolicies = {};
 let _oldUrl = null; // previous url of inspected tab after a reload/navigation.
-
-/**
- * Converts allowlist item in Feature-Policy syntax to Permissions-Policy
- * syntax.
- * @param {string} item
- * @returns {string}
- */
-function allowlistItemFP2PP(item) {
-  switch (item) {
-    case "*":
-      return "*";
-    case "'self'":
-      return "self";
-    case "'none'":
-      return "";
-    default:
-      return `"${item}"`
-  }
-}
-
-function getPermissionsPolicyAllowListOnPage(features) {
-  const map = {};
-  const permissionsPolicy = document.policy ||
-                            document.permissionsPolicy ||
-                            document.featurePolicy;
-  for (const feature of features) {
-    map[feature] = {
-      allowed: permissionsPolicy.allowsFeature(feature),
-      allowList: permissionsPolicy.getAllowlistForFeature(feature),
-    };
-  }
-  return map;
-}
 
 function reloadPage() {
   chrome.devtools.inspectedWindow.reload();
   // chrome.tabs.query({active: true}, tab => chrome.tabs.reload(tab.tabId));
-}
-
-function sortObjectByKey(obj) {
-  const sortedByName = {};
-  Object.keys(obj).sort().forEach(key => {
-    sortedByName[key] = obj[key];
-  });
-  return sortedByName;
 }
 
 function getBackgroundPage() {
@@ -135,120 +93,6 @@ const UI = {
     }, '');
   }
 };
-
-class PermissionsPolicyMananger {
-  get allPermissionsPoliciesSupportedByBrowser() {
-    if (!_allPermissionsPolicies.length) {
-      console.warn(
-        'List of permissions policies supported by the browser was not set.');
-    }
-    return _allPermissionsPolicies || [];
-  }
-
-  set allPermissionsPoliciesSupportedByBrowser(features) {
-    _allPermissionsPolicies = features;
-  }
-
-  get originalPoliciesSetByPage() {
-    return _originalPoliciesUsedOnPage || {};
-  }
-
-  set originalPoliciesSetByPage(policies) {
-    _originalPoliciesUsedOnPage = policies;
-  }
-
-  get customizedPolicies() {
-    return _customizedPolicies || {};
-  }
-
-  set customizedPolicies(policies) {
-    _customizedPolicies = policies;
-  }
-
-  /**
-   * Overrides the value in feature_policy parameter with |customizedPolicies|.
-   *
-   * @param {FeaturePolicyHeader} header
-   * @returns {FeaturePolicyHeader}
-   */
-  overrideFeaturePolicyHeader(header) {
-    for (const [policyName, val] of Object.entries(this.customizedPolicies)) {
-      header.policies.set(policyName, val.allowList);
-    }
-    return header;
-  }
-
-  /**
-   * Overrides the value in permissions_policy parameter with |customizedPolicies|.
-   *
-   * @param {PermissionsPolicyHeader} header
-   * @returns {PermissionsPolicyHeader}
-   */
-  overridePermissionsPolicyHeader(header) {
-    for (const [policyName, val] of Object.entries(this.customizedPolicies)) {
-      header.policies.set(policyName, val.allowList.map(allowlistItemFP2PP));
-    }
-    return header;
-  }
-
-  restoreOriginalPoliciesSetByPage() {
-    this.customizedPolicies = {};
-    this.originalPoliciesSetByPage = {};
-    UI.updateDOMLists();
-  }
-
-  buildCustomizedPolicyList() {
-    const list = JSON.parse(JSON.stringify(this.originalPoliciesSetByPage));
-    Object.entries(list).forEach(([feature, val]) => {
-      if (this.customizedPolicies[feature]) {
-        list[feature] = this.customizedPolicies[feature];
-      }
-    });
-    return list;
-  }
-
-  getPermissionsPolicies() {
-    // Inject the _getPermissionsPolicyAllowListOnPage function into the page
-    // and return its eval'd result.
-    const expression = `(function() {
-      ${getPermissionsPolicyAllowListOnPage.toString()};
-      const allPolicies = ${JSON.stringify(this.allPermissionsPoliciesSupportedByBrowser)};
-      return getPermissionsPolicyAllowListOnPage(allPolicies);
-    })()`;
-
-    chrome.devtools.inspectedWindow.eval(expression, (result, isException) => {
-      UI.clearError();
-
-      if (isException) {
-        UI.displayError("Error getting page's permissions policy list");
-        return;
-      }
-
-      result = sortObjectByKey(result);
-
-      if (!Object.keys(this.originalPoliciesSetByPage).length) {
-        this.originalPoliciesSetByPage = result;
-      }
-
-      UI.updateDOMLists();
-    });
-  }
-
-  togglePolicyOnPage(policyName) {
-    const customizedFeature = this.customizedPolicies[policyName];
-    if (customizedFeature) {
-      const newAllowed = !customizedFeature.allowed;
-      customizedFeature.allowed = newAllowed;
-      customizedFeature.allowList = [newAllowed ? "*" : "'none'"];
-    } else {
-      const newAllowed = !this.originalPoliciesSetByPage[policyName].allowed;
-      this.customizedPolicies[policyName] = {
-        allowed: newAllowed,
-        allowList: [newAllowed ? "*" : "'none'"],
-      };
-    }
-  }
-}
 
 const policyManager = new PermissionsPolicyMananger();
 
