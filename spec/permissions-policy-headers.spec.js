@@ -1,4 +1,4 @@
-const { FeaturePolicyHeader, PermissionsPolicyHeader } = require('../background.js');
+const { FeaturePolicyHeader, PermissionsPolicyHeader } = require('../src/permissions-policy-header.js');
 
 describe('FeaturePolicyHeader', () => {
   it('Should parse valid policy', () => {
