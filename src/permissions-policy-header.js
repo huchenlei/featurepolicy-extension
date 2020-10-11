@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-class FeaturePolicyHeader {
+export class FeaturePolicyHeader {
   /**
    * @param {Map<string, string[]>} policies
    */
@@ -30,6 +30,9 @@ class FeaturePolicyHeader {
    * @returns {FeaturePolicyHeader}
    */
   static parse(header_string) {
+    if (!header_string)
+      return new FeaturePolicyHeader(new Map());
+
     return new FeaturePolicyHeader(header_string.split(';')
       .reduce((acc, item) => {
         const [policyName, ...allowlist] = item.trim().split(' ').filter(s => s !== '');
@@ -45,7 +48,7 @@ class FeaturePolicyHeader {
   }
 };
 
-class PermissionsPolicyHeader {
+export class PermissionsPolicyHeader {
   /**
    * @param {Map<string, string[]>} policies
    */
@@ -65,6 +68,9 @@ class PermissionsPolicyHeader {
    * @returns {PermissionsPolicyHeader}
    */
   static parse(header_string) {
+    if (!header_string)
+      return new PermissionsPolicyHeader(new Map());
+
     return new PermissionsPolicyHeader(header_string.split(',')
       .reduce((acc, item) => {
         const [policyName, allowlist_string] = item.split('=').map(s => s.trim());
@@ -85,9 +91,3 @@ class PermissionsPolicyHeader {
       .join(', ');
   }
 };
-
-export {
-  FeaturePolicyHeader,
-  PermissionsPolicyHeader
-};
-

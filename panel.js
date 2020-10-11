@@ -17,7 +17,7 @@
 import {html, render} from './node_modules/lit-html/lib/lit-extended.js';
 import {repeat} from './node_modules/lit-html/lib/repeat.js';
 
-import { PermissionsPolicyMananger } from './src/permissions-policy-manager.js';
+import { PermissionsPolicyManager } from './src/permissions-policy-manager.js';
 
 const persisteAcrossReload = document.querySelector('#persist-on-reload');
 const activePoliciesEl = document.querySelector('#active-policies');
@@ -92,7 +92,7 @@ const UI = {
   }
 };
 
-const policyManager = new PermissionsPolicyMananger();
+const policyManager = new PermissionsPolicyManager();
 
 // Refresh policy lists if page is navigated.
 chrome.devtools.network.onNavigated.addListener(newUrl => {

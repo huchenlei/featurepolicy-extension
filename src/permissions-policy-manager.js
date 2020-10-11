@@ -1,3 +1,8 @@
+import {
+  FeaturePolicyHeader,
+  PermissionsPolicyHeader
+} from '../src/permissions-policy-header.js';
+
 /**
  * Converts allowlist item in Feature-Policy syntax to Permissions-Policy
  * syntax.
@@ -13,7 +18,7 @@ function allowlistItemFP2PP(item) {
     case "'none'":
       return "";
     default:
-      return `"${item}"`
+      return `"${item}"`;
   }
 }
 
@@ -43,7 +48,7 @@ let _allPermissionsPolicies = []; /* Array<string> all permissions policy names 
 let _originalPoliciesUsedOnPage = {};
 let _customizedPolicies = {};
 
-export class PermissionsPolicyMananger {
+export class PermissionsPolicyManager {
   get allPermissionsPoliciesSupportedByBrowser() {
     if (!_allPermissionsPolicies.length) {
       console.warn(
@@ -96,6 +101,61 @@ export class PermissionsPolicyMananger {
       header.policies.set(policyName, val.allowList.map(allowlistItemFP2PP));
     }
     return header;
+  }
+
+  /**
+   * Override 'Permissions-Policy' and 'Feature-Policy' header's value
+   * with those specified in |customizedPolicies|.
+   *
+   * @param {*} headers
+   * @returns {*} the same type of input parameter |headers|.
+   */
+  overrideResponseHeaders(headers) {
+    const FP_HEADER = 'Feature-Policy';
+    const PP_HEADER = 'Permissions-Policy';
+
+    function isFeaturePolicyHeader(header) {
+      return !!header.name.match(RegExp(FP_HEADER, 'i'));
+    }
+
+    function isPermissionsPolicyHeader(header) {
+      return header.name.match(RegExp(PP_HEADER, 'i'));
+    }
+
+    const featurePolicyHeaderString = headers
+      .filter(isFeaturePolicyHeader)
+      .map(header => header.value)
+      .join(';');
+
+    const permissionsPolicyHeaderString = headers
+      .filter(isPermissionsPolicyHeader)
+      .map(header => header.value)
+      .join(',');
+
+    const newFeaturePolicyHeaderString =
+      this.overrideFeaturePolicyHeader(
+        FeaturePolicyHeader.parse(featurePolicyHeaderString)
+      ).serialize();
+
+    const newPermissionsPolicyHeaderString =
+      this.overridePermissionsPolicyHeader(
+        PermissionsPolicyHeader.parse(permissionsPolicyHeaderString)
+      ).serialize();
+
+    return {
+      responseHeaders: [
+        ...(newFeaturePolicyHeaderString ? [{
+          name: FP_HEADER,
+          value: newFeaturePolicyHeaderString
+        }] : []),
+        ...(newPermissionsPolicyHeaderString ? [{
+          name: PP_HEADER,
+          value: newPermissionsPolicyHeaderString
+        }] : []),
+        ...headers
+        .filter(header => !isFeaturePolicyHeader(header) && !isPermissionsPolicyHeader(header))
+      ]
+    };
   }
 
   restoreOriginalPoliciesSetByPage() {
