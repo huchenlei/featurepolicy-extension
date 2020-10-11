@@ -10,6 +10,9 @@ describe('FeaturePolicyHeader', () => {
         C: ["'none'"],
         D: ["foo.com", "bar.com", "'self'"]
       }))));
+
+    expect(FeaturePolicyHeader.parse(''))
+      .toEqual(new FeaturePolicyHeader(new Map()));
   });
 
   it('Should serialize correctly', () => {
@@ -19,6 +22,8 @@ describe('FeaturePolicyHeader', () => {
       C: ["'none'"],
       D: ["foo.com", "bar.com", "'self'"]
     }))).serialize()).toEqual("A 'self'; B *; C 'none'; D foo.com bar.com 'self'");
+
+    expect(new FeaturePolicyHeader(new Map()).serialize()).toEqual('');
   });
 });
 
@@ -32,6 +37,9 @@ describe('PermissionsPolicyHeader', () => {
         C: [""],
         D: ['"foo.com"', '"bar.com"', "self"]
       }))));
+
+    expect(PermissionsPolicyHeader.parse(''))
+      .toEqual(new PermissionsPolicyHeader(new Map()));
   });
 
   it('Should serialize correctly', () => {
@@ -41,5 +49,7 @@ describe('PermissionsPolicyHeader', () => {
       C: [""],
       D: ['"foo.com"', '"bar.com"', "self"]
     }))).serialize()).toEqual('A=(self), B=(*), C=(), D=("foo.com" "bar.com" self)');
+
+    expect(new PermissionsPolicyHeader(new Map()).serialize()).toEqual('');
   });
 });
