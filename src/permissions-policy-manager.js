@@ -46,9 +46,12 @@ function sortObjectByKey(obj) {
 
 let _allPermissionsPolicies = []; /* Array<string> all permissions policy names supported by the browser. */
 let _originalPoliciesUsedOnPage = {};
-let _customizedPolicies = {};
 
 export class PermissionsPolicyManager {
+  constructor() {
+    this.customizedPolicies = {};
+  }
+
   get allPermissionsPoliciesSupportedByBrowser() {
     if (!_allPermissionsPolicies.length) {
       console.warn(
@@ -67,14 +70,6 @@ export class PermissionsPolicyManager {
 
   set originalPoliciesSetByPage(policies) {
     _originalPoliciesUsedOnPage = policies;
-  }
-
-  get customizedPolicies() {
-    return _customizedPolicies || {};
-  }
-
-  set customizedPolicies(policies) {
-    _customizedPolicies = policies;
   }
 
   /**
