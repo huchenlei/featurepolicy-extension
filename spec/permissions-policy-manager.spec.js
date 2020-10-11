@@ -10,6 +10,20 @@ describe('PermissionsPolicyManager.overrideResponseHeaders', () => {
     allowList: ["'none'"]
   };
 
+  it('Should not add header if no override is specified', () => {
+    expect(new PermissionsPolicyManager().overrideResponseHeaders([
+      {
+        name: 'other-header',
+        value: 'foobar',
+      }
+    ]).responseHeaders).toEqual([
+      {
+        name: 'other-header',
+        value: 'foobar',
+      }
+    ]);
+  });
+
   it('Should override feature policy headers', () => {
     expect(manager.overrideResponseHeaders([
       {
@@ -69,4 +83,6 @@ describe('PermissionsPolicyManager.overrideResponseHeaders', () => {
       },
     ]));
   });
+
+
 });
